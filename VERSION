@@ -1,6 +1,14 @@
-1.2
+1.3
 
 # Version History
+
+## v1.3 (2026-03-03)
+- **CRITICAL FIX**: Cockpit tab looks at ROW 10 for most recent date (was checking wrong rows)
+- Finds most recent date in Cockpit row 10, then copies that column to next column
+- Example: BJ (row 10 has most recent date) → BK (new column)
+- BTH file uses most recent date from row 30
+- Added verification step: confirms value is correctly pasted to Cockpit row 20
+- Expected result: 564,519,892 in Cockpit BK20
 
 ## v1.2 (2026-03-03)
 - **BUG FIX**: Cockpit tab now uses same column as Beginning Balances (stays in sync)

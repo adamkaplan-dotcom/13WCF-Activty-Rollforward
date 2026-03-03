@@ -360,91 +360,110 @@ def process_files(weekly_file_path, rollforward_file_path, bth_file_path=None):
             sheet_cockpit = wb_target["Cockpit"]
             log.append("✓ Found Cockpit tab")
 
-            # Use the SAME column we just created in Beginning Balances
-            # This keeps both tabs in sync
-            cockpit_prev_col = new_col - 1  # Previous column (e.g., BJ if new_col is BK)
-            cockpit_new_col = new_col        # Same as Beginning Balances (e.g., BK)
+            # Find the column with the most recent date in Cockpit tab ROW 10
+            last_date_col_cockpit = None
+            most_recent_date = None
 
-            log.append(f"Copying from column {openpyxl.utils.get_column_letter(cockpit_prev_col)} to {openpyxl.utils.get_column_letter(cockpit_new_col)}")
+            # Search for dates in ROW 10 of Cockpit tab
+            for col in range(1, sheet_cockpit.max_column + 1):
+                cell_val = sheet_cockpit.cell(10, col).value
+                if cell_val and isinstance(cell_val, datetime):
+                    if most_recent_date is None or cell_val > most_recent_date:
+                        most_recent_date = cell_val
+                        last_date_col_cockpit = col
 
-            # Copy formatting from previous column
-            from copy import copy
-            for row in range(1, sheet_cockpit.max_row + 1):
-                source_cell = sheet_cockpit.cell(row, cockpit_prev_col)
-                target_cell = sheet_cockpit.cell(row, cockpit_new_col)
+            if last_date_col_cockpit:
+                cockpit_prev_col = last_date_col_cockpit
+                cockpit_new_col = last_date_col_cockpit + 1
 
-                # Copy formatting
-                if source_cell.has_style:
-                    target_cell.font = copy(source_cell.font)
-                    target_cell.border = copy(source_cell.border)
-                    target_cell.fill = copy(source_cell.fill)
-                    target_cell.number_format = copy(source_cell.number_format)
-                    target_cell.protection = copy(source_cell.protection)
-                    target_cell.alignment = copy(source_cell.alignment)
+                log.append(f"Most recent date found: {most_recent_date}")
+                log.append(f"Last column with date: {openpyxl.utils.get_column_letter(cockpit_prev_col)}")
+                log.append(f"Copying formulas to column: {openpyxl.utils.get_column_letter(cockpit_new_col)}")
 
-            # Copy formulas/values from previous column to new column
-            cockpit_formulas_copied = 0
-            for row in range(1, sheet_cockpit.max_row + 1):
-                source_cell = sheet_cockpit.cell(row, cockpit_prev_col)
-                target_cell = sheet_cockpit.cell(row, cockpit_new_col)
+                # Copy formatting from previous column
+                from copy import copy
+                for row in range(1, sheet_cockpit.max_row + 1):
+                    source_cell = sheet_cockpit.cell(row, cockpit_prev_col)
+                    target_cell = sheet_cockpit.cell(row, cockpit_new_col)
 
-                # Copy formula or value
-                if source_cell.value and isinstance(source_cell.value, str) and source_cell.value.startswith('='):
-                    # Adjust column references in formula
-                    adjusted_formula = adjust_formula_columns(source_cell.value, column_offset=1)
-                    target_cell.value = adjusted_formula
-                    cockpit_formulas_copied += 1
-                else:
-                    target_cell.value = source_cell.value
+                    # Copy formatting
+                    if source_cell.has_style:
+                        target_cell.font = copy(source_cell.font)
+                        target_cell.border = copy(source_cell.border)
+                        target_cell.fill = copy(source_cell.fill)
+                        target_cell.number_format = copy(source_cell.number_format)
+                        target_cell.protection = copy(source_cell.protection)
+                        target_cell.alignment = copy(source_cell.alignment)
 
-            log.append(f"✓ Copied {cockpit_formulas_copied} formulas to Cockpit tab")
+                # Copy formulas/values from previous column to new column
+                cockpit_formulas_copied = 0
+                for row in range(1, sheet_cockpit.max_row + 1):
+                    source_cell = sheet_cockpit.cell(row, cockpit_prev_col)
+                    target_cell = sheet_cockpit.cell(row, cockpit_new_col)
 
-            # Process BTH file if provided
-            if bth_file_path:
-                log.append("")
-                log.append("="*60)
-                log.append("STEP 9: Processing BTH Investments File")
-                log.append("="*60)
+                    # Copy formula or value
+                    if source_cell.value and isinstance(source_cell.value, str) and source_cell.value.startswith('='):
+                        # Adjust column references in formula
+                        adjusted_formula = adjust_formula_columns(source_cell.value, column_offset=1)
+                        target_cell.value = adjusted_formula
+                        cockpit_formulas_copied += 1
+                    else:
+                        target_cell.value = source_cell.value
 
-                try:
-                    wb_bth = openpyxl.load_workbook(bth_file_path, data_only=True)
+                log.append(f"✓ Copied {cockpit_formulas_copied} formulas to Cockpit column {openpyxl.utils.get_column_letter(cockpit_new_col)}")
 
-                    if "Summary" in wb_bth.sheetnames:
-                        sheet_bth = wb_bth["Summary"]
-                        log.append("✓ Found Summary tab in BTH file")
+                # Process BTH file if provided
+                if bth_file_path:
+                    log.append("")
+                    log.append("="*60)
+                    log.append("STEP 9: Processing BTH Investments File")
+                    log.append("="*60)
 
-                        # Find the date in row 14 of Beginning Balances (which we just added to)
-                        target_date = sheet_target.cell(14, new_col).value
-                        log.append(f"Looking for date: {target_date}")
+                    try:
+                        wb_bth = openpyxl.load_workbook(bth_file_path, data_only=True)
 
-                        # Search for matching date in row 30 of BTH Summary tab
-                        matched_bth_col = None
-                        for col in range(1, sheet_bth.max_column + 1):
-                            bth_date = sheet_bth.cell(30, col).value
-                            if bth_date and isinstance(bth_date, datetime):
-                                # Compare dates (ignore time component)
-                                if isinstance(target_date, datetime):
-                                    if bth_date.date() == target_date.date():
-                                        matched_bth_col = col
-                                        break
+                        if "Summary" in wb_bth.sheetnames:
+                            sheet_bth = wb_bth["Summary"]
+                            log.append("✓ Found Summary tab in BTH file")
 
-                        if matched_bth_col:
-                            # Get Total BTH Financing from row 42
-                            bth_financing_total = sheet_bth.cell(42, matched_bth_col).value
-                            log.append(f"✓ Matched date in column {openpyxl.utils.get_column_letter(matched_bth_col)}")
-                            log.append(f"Total BTH Financing (row 42): {bth_financing_total}")
+                            # Find the MOST RECENT DATE in row 30 of BTH Summary tab
+                            bth_most_recent_date = None
+                            bth_most_recent_col = None
 
-                            # Paste to Cockpit tab, row 20, new column
-                            sheet_cockpit.cell(20, cockpit_new_col).value = bth_financing_total
-                            log.append(f"✓ Pasted {bth_financing_total} to Cockpit {openpyxl.utils.get_column_letter(cockpit_new_col)}20")
-                        else:
-                            log.append("⚠ Could not find matching date in BTH file")
+                            for col in range(1, sheet_bth.max_column + 1):
+                                bth_date = sheet_bth.cell(30, col).value
+                                if bth_date and isinstance(bth_date, datetime):
+                                    if bth_most_recent_date is None or bth_date > bth_most_recent_date:
+                                        bth_most_recent_date = bth_date
+                                        bth_most_recent_col = col
 
-                    wb_bth.close()
+                            if bth_most_recent_col:
+                                # Get Total BTH Financing from row 42 for most recent date
+                                bth_financing_total = sheet_bth.cell(42, bth_most_recent_col).value
+                                log.append(f"✓ Most recent BTH date: {bth_most_recent_date.strftime('%Y-%m-%d')}")
+                                log.append(f"✓ Found in column {openpyxl.utils.get_column_letter(bth_most_recent_col)}")
+                                log.append(f"Total BTH Financing (row 42): {bth_financing_total}")
 
-                except Exception as e:
-                    log.append(f"⚠ Error processing BTH file: {str(e)}")
-                    log.append(traceback.format_exc())
+                                # Paste to Cockpit tab, row 20, new column
+                                sheet_cockpit.cell(20, cockpit_new_col).value = bth_financing_total
+                                log.append(f"✓ Pasted {bth_financing_total} to Cockpit {openpyxl.utils.get_column_letter(cockpit_new_col)}20")
+
+                                # VERIFY the value was pasted correctly
+                                verification_value = sheet_cockpit.cell(20, cockpit_new_col).value
+                                if verification_value == bth_financing_total:
+                                    log.append(f"✅ VERIFIED: Cell {openpyxl.utils.get_column_letter(cockpit_new_col)}20 = {verification_value}")
+                                else:
+                                    log.append(f"⚠️ WARNING: Verification failed! Expected {bth_financing_total}, got {verification_value}")
+                            else:
+                                log.append("⚠ Could not find any dates in BTH file row 30")
+
+                        wb_bth.close()
+
+                    except Exception as e:
+                        log.append(f"⚠ Error processing BTH file: {str(e)}")
+                        log.append(traceback.format_exc())
+            else:
+                log.append("⚠ Could not find any date columns in Cockpit tab")
         else:
             log.append("⚠ Cockpit tab not found in Activity Rollforward file")
 
