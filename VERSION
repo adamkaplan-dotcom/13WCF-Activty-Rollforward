@@ -1,0 +1,23 @@
+1.0
+
+# Version History
+
+## v1.0 (2026-03-03)
+- Initial versioned release
+- Python Flask web application for Excel balance processing
+- Formula adjustment with absolute/relative reference handling
+- Special handling for references 11, 60, 76, 91 (copy from previous week)
+- Mobile/network access with QR code support
+- Improved formula adjustment (two-pass regex)
+- All test cases passing
+
+## File Naming Convention
+`13WCF-Activity Rollforward App v{MAJOR}.{MINOR}.py`
+
+When updating:
+1. Increment MINOR for bug fixes and small changes (1.0 → 1.1)
+2. Increment MAJOR for significant features or breaking changes (1.9 → 2.0)
+3. Archive old version to Archive/Old_Versions_{DATE}/
+4. Update this VERSION file
+5. Update START_PYTHON_APP.command with new filename
+6. Commit changes to git with version tag

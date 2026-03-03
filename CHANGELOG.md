@@ -1,6 +1,6 @@
-# Balance Updater - Recent Changes
+# Balance Updater - Changelog
 
-## Latest Update (March 3, 2026)
+## v1.0 (March 3, 2026) - Initial Versioned Release
 
 ### ✅ Formula Adjustment Function - FIXED
 - **Problem**: Previous formula adjustment was modifying function names (INDEX became INDEY, SUM became SUN)
@@ -48,11 +48,13 @@
 ## File Structure
 ```
 BalanceUpdater/
-├── 13WCF- Balance Updater App.py  ⭐ Main application
-├── START_PYTHON_APP.command       ⭐ Start server
-├── 13WCF - Balance Updater.command ⭐ Open in Chrome
+├── 13WCF-Activity Rollforward App v1.0.py  ⭐ Main application (versioned)
+├── START_PYTHON_APP.command                ⭐ Start server
+├── 13WCF - Balance Updater.command         ⭐ Open in Chrome
 ├── SHOW QR CODE.command
 ├── Mobile Access - Scan QR Code.html
+├── VERSION                                 📋 Version tracking
+├── CHANGELOG.md                            📋 Change history
 ├── requirements.txt
 ├── templates/
 ├── static/
@@ -62,6 +64,7 @@ BalanceUpdater/
 ├── README.md
 ├── CLAUDE.md
 └── Archive/
+    ├── Old_Versions_2026-03-03/
     ├── Old_Test_Files/
     ├── Python_Old/
     └── React/

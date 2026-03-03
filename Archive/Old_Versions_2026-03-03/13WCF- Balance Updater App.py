@@ -265,6 +265,10 @@ def process_files(weekly_file_path, rollforward_file_path):
         data_start_row_target = 15  # Data starts at row 15
         matched = 0
         not_matched = 0
+        copied_from_prev = 0
+
+        # Special references that should copy from previous week instead of Weekly Balances file
+        copy_from_previous_refs = ['11', '60', '76', '91']
 
         for row in range(data_start_row_target, sheet_target.max_row + 1):
             ref_num = sheet_target.cell(row, ref_col_target).value
@@ -272,7 +276,15 @@ def process_files(weekly_file_path, rollforward_file_path):
             if ref_num is not None:
                 ref_str = str(ref_num).strip()
 
-                if ref_str in balances:
+                # Check if this is a special reference that should copy from previous week
+                # Only applies to rows between 15 and 148
+                if ref_str in copy_from_previous_refs and row <= 148:
+                    # Copy value from previous week's column
+                    prev_value = sheet_target.cell(row, last_col_with_date).value
+                    sheet_target.cell(row, new_col).value = prev_value
+                    copied_from_prev += 1
+                    log.append(f"  Row {row} (Ref {ref_str}): Copied {prev_value} from previous week")
+                elif ref_str in balances:
                     sheet_target.cell(row, new_col).value = balances[ref_str]
                     matched += 1
                 else:
@@ -280,6 +292,7 @@ def process_files(weekly_file_path, rollforward_file_path):
                     not_matched += 1
 
         log.append(f"✓ Matched and pasted: {matched} records")
+        log.append(f"✓ Copied from previous week: {copied_from_prev} records (refs: 11, 60, 76, 91)")
         if not_matched > 0:
             log.append(f"⚠ Not found in source: {not_matched} records (set to 0.0)")
 
