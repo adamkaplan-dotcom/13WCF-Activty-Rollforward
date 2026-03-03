@@ -360,49 +360,44 @@ def process_files(weekly_file_path, rollforward_file_path, bth_file_path=None):
             sheet_cockpit = wb_target["Cockpit"]
             log.append("✓ Found Cockpit tab")
 
-            # Find last column with content in row 1 (header row)
-            last_cockpit_col = None
-            for col in range(1, sheet_cockpit.max_column + 1):
-                val = sheet_cockpit.cell(1, col).value
-                if val is not None:
-                    last_cockpit_col = col
+            # Use the SAME column we just created in Beginning Balances
+            # This keeps both tabs in sync
+            cockpit_prev_col = new_col - 1  # Previous column (e.g., BJ if new_col is BK)
+            cockpit_new_col = new_col        # Same as Beginning Balances (e.g., BK)
 
-            if last_cockpit_col:
-                new_cockpit_col = last_cockpit_col + 1
-                log.append(f"Last column with data: {openpyxl.utils.get_column_letter(last_cockpit_col)}")
-                log.append(f"Copying formulas to column: {openpyxl.utils.get_column_letter(new_cockpit_col)}")
+            log.append(f"Copying from column {openpyxl.utils.get_column_letter(cockpit_prev_col)} to {openpyxl.utils.get_column_letter(cockpit_new_col)}")
 
-                # Copy formatting from previous column
-                for row in range(1, sheet_cockpit.max_row + 1):
-                    source_cell = sheet_cockpit.cell(row, last_cockpit_col)
-                    target_cell = sheet_cockpit.cell(row, new_cockpit_col)
+            # Copy formatting from previous column
+            from copy import copy
+            for row in range(1, sheet_cockpit.max_row + 1):
+                source_cell = sheet_cockpit.cell(row, cockpit_prev_col)
+                target_cell = sheet_cockpit.cell(row, cockpit_new_col)
 
-                    # Copy formatting
-                    if source_cell.has_style:
-                        from copy import copy
-                        target_cell.font = copy(source_cell.font)
-                        target_cell.border = copy(source_cell.border)
-                        target_cell.fill = copy(source_cell.fill)
-                        target_cell.number_format = copy(source_cell.number_format)
-                        target_cell.protection = copy(source_cell.protection)
-                        target_cell.alignment = copy(source_cell.alignment)
+                # Copy formatting
+                if source_cell.has_style:
+                    target_cell.font = copy(source_cell.font)
+                    target_cell.border = copy(source_cell.border)
+                    target_cell.fill = copy(source_cell.fill)
+                    target_cell.number_format = copy(source_cell.number_format)
+                    target_cell.protection = copy(source_cell.protection)
+                    target_cell.alignment = copy(source_cell.alignment)
 
-                # Copy formulas/values from last column to new column
-                cockpit_formulas_copied = 0
-                for row in range(1, sheet_cockpit.max_row + 1):
-                    source_cell = sheet_cockpit.cell(row, last_cockpit_col)
-                    target_cell = sheet_cockpit.cell(row, new_cockpit_col)
+            # Copy formulas/values from previous column to new column
+            cockpit_formulas_copied = 0
+            for row in range(1, sheet_cockpit.max_row + 1):
+                source_cell = sheet_cockpit.cell(row, cockpit_prev_col)
+                target_cell = sheet_cockpit.cell(row, cockpit_new_col)
 
-                    # Copy formula or value
-                    if source_cell.value and isinstance(source_cell.value, str) and source_cell.value.startswith('='):
-                        # Adjust column references in formula
-                        adjusted_formula = adjust_formula_columns(source_cell.value, column_offset=1)
-                        target_cell.value = adjusted_formula
-                        cockpit_formulas_copied += 1
-                    else:
-                        target_cell.value = source_cell.value
+                # Copy formula or value
+                if source_cell.value and isinstance(source_cell.value, str) and source_cell.value.startswith('='):
+                    # Adjust column references in formula
+                    adjusted_formula = adjust_formula_columns(source_cell.value, column_offset=1)
+                    target_cell.value = adjusted_formula
+                    cockpit_formulas_copied += 1
+                else:
+                    target_cell.value = source_cell.value
 
-                log.append(f"✓ Copied {cockpit_formulas_copied} formulas to Cockpit tab")
+            log.append(f"✓ Copied {cockpit_formulas_copied} formulas to Cockpit tab")
 
                 # Process BTH file if provided
                 if bth_file_path:
@@ -440,8 +435,8 @@ def process_files(weekly_file_path, rollforward_file_path, bth_file_path=None):
                                 log.append(f"Total BTH Financing (row 42): {bth_financing_total}")
 
                                 # Paste to Cockpit tab, row 20, new column
-                                sheet_cockpit.cell(20, new_cockpit_col).value = bth_financing_total
-                                log.append(f"✓ Pasted {bth_financing_total} to Cockpit {openpyxl.utils.get_column_letter(new_cockpit_col)}20")
+                                sheet_cockpit.cell(20, cockpit_new_col).value = bth_financing_total
+                                log.append(f"✓ Pasted {bth_financing_total} to Cockpit {openpyxl.utils.get_column_letter(cockpit_new_col)}20")
                             else:
                                 log.append("⚠ Could not find matching date in BTH file")
 
@@ -450,8 +445,6 @@ def process_files(weekly_file_path, rollforward_file_path, bth_file_path=None):
                     except Exception as e:
                         log.append(f"⚠ Error processing BTH file: {str(e)}")
                         log.append(traceback.format_exc())
-            else:
-                log.append("⚠ Could not find last column in Cockpit tab")
         else:
             log.append("⚠ Cockpit tab not found in Activity Rollforward file")
 

@@ -1,8 +1,8 @@
 # Versioning Guide for 13WCF-Activity Rollforward App
 
-## ✅ Current Version: v1.1
+## ✅ Current Version: v1.2
 
-**Main File:** `13WCF-Activity Rollforward App v1.1.py`
+**Main File:** `13WCF-Activity Rollforward App v1.2.py`
 
 ---
 

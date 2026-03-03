@@ -1,5 +1,24 @@
 # Balance Updater - Changelog
 
+## v1.2 (March 3, 2026) - Bug Fix: Cockpit Column Sync
+
+### Bug Fixes
+🐛 **Fixed Cockpit Tab Column Synchronization**
+- **Issue**: Cockpit tab was searching for its own last column instead of using the same column as Beginning Balances
+- **Fix**: Cockpit now uses the exact same column number as Beginning Balances (e.g., if Beginning Balances uses BK, Cockpit also uses BK)
+- **Impact**: Ensures both tabs stay in sync and use matching columns for the same week's data
+
+### Technical Changes
+- Changed Cockpit logic to use `new_col` (from Beginning Balances) instead of searching independently
+- Copies from `new_col - 1` to `new_col` (e.g., BJ → BK)
+- Removed redundant column search logic in Cockpit processing
+- BTH integration now correctly uses `cockpit_new_col` variable
+
+### Result
+✅ Beginning Balances column BK ← Weekly Balances data
+✅ Cockpit column BK ← Formulas copied from BJ
+✅ Cockpit cell BK20 ← BTH Financing total (if BTH file provided)
+
 ## v1.1 (March 3, 2026) - Cockpit Tab & BTH Integration
 
 ### New Features

@@ -1,6 +1,12 @@
-1.1
+1.2
 
 # Version History
+
+## v1.2 (2026-03-03)
+- **BUG FIX**: Cockpit tab now uses same column as Beginning Balances (stays in sync)
+- Fixed issue where Cockpit wasn't copying formulas correctly
+- Cockpit now copies from previous column to new column using same column number as Beginning Balances
+- Ensures Beginning Balances and Cockpit tabs use matching columns
 
 ## v1.1 (2026-03-03)
 - Added Cockpit tab processing (copies formulas from last column to next column)
