@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# Navigate to the app directory
+cd "$(dirname "$0")"
+
+echo "=========================================="
+echo "Balance Updater - Starting..."
+echo "=========================================="
+echo ""
+
+# Check if Python3 is installed
+if ! command -v python3 &> /dev/null; then
+    echo "❌ Python 3 is not installed!"
+    echo "Please install Python 3 from https://www.python.org/"
+    read -p "Press Enter to exit..."
+    exit 1
+fi
+
+# Check if virtual environment exists, create if not
+if [ ! -d "venv" ]; then
+    echo "Creating virtual environment..."
+    python3 -m venv venv
+fi
+
+# Activate virtual environment
+source venv/bin/activate
+
+# Install/upgrade dependencies
+echo "Installing dependencies..."
+pip install -q --upgrade pip
+pip install -q -r requirements.txt
+
+# Start the Flask app
+echo ""
+echo "=========================================="
+echo "✅ Server is starting..."
+echo "=========================================="
+echo ""
+echo "🌐 Open your browser and go to:"
+echo ""
+echo "    http://localhost:5000"
+echo ""
+echo "=========================================="
+echo "Press CTRL+C to stop the server"
+echo "=========================================="
+echo ""
+
+python3 app.py
+
+# Deactivate when done
+deactivate
