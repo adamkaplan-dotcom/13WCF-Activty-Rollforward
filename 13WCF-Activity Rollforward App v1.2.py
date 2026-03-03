@@ -399,52 +399,52 @@ def process_files(weekly_file_path, rollforward_file_path, bth_file_path=None):
 
             log.append(f"✓ Copied {cockpit_formulas_copied} formulas to Cockpit tab")
 
-                # Process BTH file if provided
-                if bth_file_path:
-                    log.append("")
-                    log.append("="*60)
-                    log.append("STEP 9: Processing BTH Investments File")
-                    log.append("="*60)
+            # Process BTH file if provided
+            if bth_file_path:
+                log.append("")
+                log.append("="*60)
+                log.append("STEP 9: Processing BTH Investments File")
+                log.append("="*60)
 
-                    try:
-                        wb_bth = openpyxl.load_workbook(bth_file_path, data_only=True)
+                try:
+                    wb_bth = openpyxl.load_workbook(bth_file_path, data_only=True)
 
-                        if "Summary" in wb_bth.sheetnames:
-                            sheet_bth = wb_bth["Summary"]
-                            log.append("✓ Found Summary tab in BTH file")
+                    if "Summary" in wb_bth.sheetnames:
+                        sheet_bth = wb_bth["Summary"]
+                        log.append("✓ Found Summary tab in BTH file")
 
-                            # Find the date in row 14 of Beginning Balances (which we just added to)
-                            target_date = sheet_target.cell(14, new_col).value
-                            log.append(f"Looking for date: {target_date}")
+                        # Find the date in row 14 of Beginning Balances (which we just added to)
+                        target_date = sheet_target.cell(14, new_col).value
+                        log.append(f"Looking for date: {target_date}")
 
-                            # Search for matching date in row 30 of BTH Summary tab
-                            matched_bth_col = None
-                            for col in range(1, sheet_bth.max_column + 1):
-                                bth_date = sheet_bth.cell(30, col).value
-                                if bth_date and isinstance(bth_date, datetime):
-                                    # Compare dates (ignore time component)
-                                    if isinstance(target_date, datetime):
-                                        if bth_date.date() == target_date.date():
-                                            matched_bth_col = col
-                                            break
+                        # Search for matching date in row 30 of BTH Summary tab
+                        matched_bth_col = None
+                        for col in range(1, sheet_bth.max_column + 1):
+                            bth_date = sheet_bth.cell(30, col).value
+                            if bth_date and isinstance(bth_date, datetime):
+                                # Compare dates (ignore time component)
+                                if isinstance(target_date, datetime):
+                                    if bth_date.date() == target_date.date():
+                                        matched_bth_col = col
+                                        break
 
-                            if matched_bth_col:
-                                # Get Total BTH Financing from row 42
-                                bth_financing_total = sheet_bth.cell(42, matched_bth_col).value
-                                log.append(f"✓ Matched date in column {openpyxl.utils.get_column_letter(matched_bth_col)}")
-                                log.append(f"Total BTH Financing (row 42): {bth_financing_total}")
+                        if matched_bth_col:
+                            # Get Total BTH Financing from row 42
+                            bth_financing_total = sheet_bth.cell(42, matched_bth_col).value
+                            log.append(f"✓ Matched date in column {openpyxl.utils.get_column_letter(matched_bth_col)}")
+                            log.append(f"Total BTH Financing (row 42): {bth_financing_total}")
 
-                                # Paste to Cockpit tab, row 20, new column
-                                sheet_cockpit.cell(20, cockpit_new_col).value = bth_financing_total
-                                log.append(f"✓ Pasted {bth_financing_total} to Cockpit {openpyxl.utils.get_column_letter(cockpit_new_col)}20")
-                            else:
-                                log.append("⚠ Could not find matching date in BTH file")
+                            # Paste to Cockpit tab, row 20, new column
+                            sheet_cockpit.cell(20, cockpit_new_col).value = bth_financing_total
+                            log.append(f"✓ Pasted {bth_financing_total} to Cockpit {openpyxl.utils.get_column_letter(cockpit_new_col)}20")
+                        else:
+                            log.append("⚠ Could not find matching date in BTH file")
 
-                        wb_bth.close()
+                    wb_bth.close()
 
-                    except Exception as e:
-                        log.append(f"⚠ Error processing BTH file: {str(e)}")
-                        log.append(traceback.format_exc())
+                except Exception as e:
+                    log.append(f"⚠ Error processing BTH file: {str(e)}")
+                    log.append(traceback.format_exc())
         else:
             log.append("⚠ Cockpit tab not found in Activity Rollforward file")
 
