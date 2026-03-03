@@ -1,6 +1,13 @@
-1.0
+1.1
 
 # Version History
+
+## v1.1 (2026-03-03)
+- Added Cockpit tab processing (copies formulas from last column to next column)
+- Added BTH Investments Financing Schedule file upload (optional third file)
+- BTH file integration: matches date and pastes Total BTH Financing to Cockpit row 20
+- Updated UI to support 3-column file upload grid
+- Enhanced processing logic with Steps 8-10
 
 ## v1.0 (2026-03-03)
 - Initial versioned release

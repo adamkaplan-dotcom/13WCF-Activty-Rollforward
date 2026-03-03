@@ -1,5 +1,36 @@
 # Balance Updater - Changelog
 
+## v1.1 (March 3, 2026) - Cockpit Tab & BTH Integration
+
+### New Features
+✅ **Cockpit Tab Processing**
+- Finds last column with data in Cockpit tab
+- Copies formulas from last column to next column (just like Beginning Balances)
+- Preserves formatting from previous column
+- Example: Column BJ formulas → Column BK
+
+✅ **BTH Investments Financing Schedule Integration**
+- Added optional third file upload
+- Reads Summary tab from BTH file
+- Matches date in row 30 (BTH Financing dates)
+- Extracts Total BTH Financing from row 42
+- Pastes to Cockpit tab, row 20, in new column
+- Example: 564,519,892 pasted to BK20
+
+### Technical Updates
+- Updated `process_files()` to accept optional `bth_file_path` parameter
+- Added STEP 8: Processing Cockpit Tab
+- Added STEP 9: Processing BTH Investments File
+- Updated upload endpoint to handle 3 files (2 required, 1 optional)
+- Updated UI with 3-column grid layout
+- Enhanced JavaScript to manage BTH file upload
+
+### UI Changes
+- Changed upload grid from 2 columns to 3 columns
+- Added responsive breakpoint for mobile (stacks vertically)
+- BTH file field marked as optional with lighter opacity
+- Maintains all existing functionality for the two required files
+
 ## v1.0 (March 3, 2026) - Initial Versioned Release
 
 ### ✅ Formula Adjustment Function - FIXED

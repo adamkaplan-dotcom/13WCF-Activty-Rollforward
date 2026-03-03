@@ -24,7 +24,7 @@ Balance Updater is a **Python Flask web application** that processes Excel files
 python3 -m venv python_venv
 source python_venv/bin/activate
 pip install -r requirements.txt
-python3 13WCF-Activity Rollforward App v1.0.py
+python3 13WCF-Activity Rollforward App v1.1.py
 ```
 
 ### Install/update dependencies
@@ -47,7 +47,7 @@ The app runs with `debug=True` by default on port 5000. Access at http://localho
 ### File Structure
 ```
 BalanceUpdater/
-├── 13WCF-Activity Rollforward App v1.0.py  # Main Flask application
+├── 13WCF-Activity Rollforward App v1.1.py  # Main Flask application
 ├── requirements.txt               # Python dependencies
 ├── START_PYTHON_APP.command       # Launch script (double-click this!)
 ├── templates/
@@ -96,7 +96,7 @@ BalanceUpdater/
 
 ### Key Processing Steps in `process_files()`
 
-Located in `13WCF-Activity Rollforward App v1.0.py`, lines ~25-223:
+Located in `13WCF-Activity Rollforward App v1.1.py`, lines ~25-223:
 
 1. **Read source data** (Weekly Balances file)
    - Load with `openpyxl.load_workbook(data_only=True)` to read calculated values
@@ -150,7 +150,7 @@ formulaRow = 9               # Row 10 in Excel
 ## File Handling
 
 ### Upload Constraints
-- Max file size: 100MB (configurable in `13WCF-Activity Rollforward App v1.0.py` line 16)
+- Max file size: 100MB (configurable in `13WCF-Activity Rollforward App v1.1.py` line 16)
 - Allowed extensions: .xlsx, .xls
 - Files must have required tabs (validation during processing)
 
@@ -162,7 +162,7 @@ formulaRow = 9               # Row 10 in Excel
 
 ## API Endpoints
 
-Located in `13WCF-Activity Rollforward App v1.0.py`:
+Located in `13WCF-Activity Rollforward App v1.1.py`:
 
 - `GET /` - Main upload interface (renders templates/index.html)
 - `POST /upload` - Process files (expects multipart form with weekly_file and rollforward_file)
@@ -173,7 +173,7 @@ Located in `13WCF-Activity Rollforward App v1.0.py`:
 
 ### Changing Excel Row/Column References
 
-All hardcoded references are in `process_files()` function (13WCF-Activity Rollforward App v1.0.py):
+All hardcoded references are in `process_files()` function (13WCF-Activity Rollforward App v1.1.py):
 - `header_row_source = 9` (line ~43) - Excel row 10
 - `data_start_row = 12` (line ~44) - Excel row 13
 - `balance_col = 10` (line ~68) - Excel column K
@@ -206,7 +206,7 @@ Modify `allowed_file()` function (line ~21) or add validation in `process_files(
 ## Debugging Tips
 
 ### Flask Debug Mode
-Debug mode is enabled by default (13WCF-Activity Rollforward App v1.0.py line ~316):
+Debug mode is enabled by default (13WCF-Activity Rollforward App v1.1.py line ~316):
 ```python
 app.run(debug=True, host='0.0.0.0', port=5000)
 ```
@@ -263,7 +263,7 @@ Previous iterations of the Python version with different processing logic.
 ## Versioning Protocol (IMPORTANT)
 
 ### Current Version
-**v1.0** - `13WCF-Activity Rollforward App v1.0.py`
+**v1.1** - `13WCF-Activity Rollforward App v1.1.py`
 
 ### When Saving/Updating the App
 
@@ -275,7 +275,7 @@ Previous iterations of the Python version with different processing logic.
    - Increment MAJOR (1.9 → 2.0) for: significant features, breaking changes, major rewrites
 3. **Archive old version:**
    ```bash
-   mv "13WCF-Activity Rollforward App v1.0.py" "Archive/Old_Versions_YYYY-MM-DD/"
+   mv "13WCF-Activity Rollforward App v1.1.py" "Archive/Old_Versions_YYYY-MM-DD/"
    ```
 4. **Save new version:**
    ```bash
@@ -299,7 +299,7 @@ Previous iterations of the Python version with different processing logic.
 ```
 
 **Examples:**
-- `13WCF-Activity Rollforward App v1.0.py` - Initial release
+- `13WCF-Activity Rollforward App v1.1.py` - Initial release
 - `13WCF-Activity Rollforward App v1.1.py` - Bug fixes
 - `13WCF-Activity Rollforward App v2.0.py` - Major update
 

@@ -49,9 +49,15 @@
 
         .upload-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
             margin-bottom: 30px;
+        }
+
+        @media (max-width: 1024px) {
+            .upload-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         .drop-zone {
@@ -284,6 +290,15 @@
                     <div class="file-name" id="rollforwardFileName"></div>
                     <input type="file" id="rollforwardFileInput" accept=".xlsx,.xls" style="display: none;">
                 </div>
+
+                <div class="drop-zone" id="bthDropZone" style="opacity: 0.9;">
+                    <div class="drop-zone-icon">💼</div>
+                    <h3>BTH Investments File</h3>
+                    <p>Drag & drop or click to select</p>
+                    <p style="font-size: 12px; margin-top: 5px; color: #a0aec0;">(Optional - BTH Financing Schedule)</p>
+                    <div class="file-name" id="bthFileName"></div>
+                    <input type="file" id="bthFileInput" accept=".xlsx,.xls" style="display: none;">
+                </div>
             </div>
 
             <button class="process-button" id="processButton" disabled>
@@ -323,6 +338,7 @@
     <script>
         let weeklyFile = null;
         let rollforwardFile = null;
+        let bthFile = null;
 
         // Setup drop zones
         setupDropZone('weeklyDropZone', 'weeklyFileInput', 'weeklyFileName', (file) => {
@@ -333,6 +349,11 @@
         setupDropZone('rollforwardDropZone', 'rollforwardFileInput', 'rollforwardFileName', (file) => {
             rollforwardFile = file;
             checkReadyToProcess();
+        });
+
+        setupDropZone('bthDropZone', 'bthFileInput', 'bthFileName', (file) => {
+            bthFile = file;
+            // BTH file is optional, don't need to check
         });
 
         function setupDropZone(dropZoneId, inputId, fileNameId, callback) {
@@ -389,6 +410,9 @@
             const formData = new FormData();
             formData.append('weekly_file', weeklyFile);
             formData.append('rollforward_file', rollforwardFile);
+            if (bthFile) {
+                formData.append('bth_file', bthFile);
+            }
 
             const button = document.getElementById('processButton');
             const spinner = document.getElementById('spinner');
