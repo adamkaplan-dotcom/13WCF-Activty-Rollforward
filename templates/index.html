@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Balance Updater</title>
+    <title>Activity Aggregator Update</title>
     <style>
         * {
             margin: 0;
@@ -12,8 +12,8 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: Arial, sans-serif;
+            background: #000000;
             min-height: 100vh;
             padding: 20px;
         }
@@ -29,22 +29,30 @@
             margin-bottom: 40px;
         }
 
+        .header .logo {
+            width: 150px;
+            margin-bottom: 20px;
+        }
+
         .header h1 {
             font-size: 2.5em;
             margin-bottom: 10px;
+            color: #23D389;
+            font-weight: bold;
         }
 
         .header p {
             font-size: 1.1em;
-            opacity: 0.9;
+            color: #CBD0DB;
         }
 
         .upload-section {
-            background: white;
+            background: #1a1a1a;
             border-radius: 12px;
             padding: 40px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 40px rgba(35, 211, 137, 0.1);
             margin-bottom: 30px;
+            border: 1px solid #2a2a2a;
         }
 
         .upload-grid {
@@ -61,29 +69,29 @@
         }
 
         .drop-zone {
-            border: 3px dashed #cbd5e0;
+            border: 2px dashed #CBD0DB;
             border-radius: 8px;
             padding: 40px 20px;
             text-align: center;
             transition: all 0.3s;
             cursor: pointer;
-            background: #f7fafc;
+            background: #0a0a0a;
         }
 
         .drop-zone:hover {
-            border-color: #667eea;
-            background: #edf2f7;
+            border-color: #23D389;
+            background: #1a1a1a;
         }
 
         .drop-zone.dragover {
-            border-color: #667eea;
-            background: #e6f2ff;
+            border-color: #23D389;
+            background: #1a3326;
             transform: scale(1.02);
         }
 
         .drop-zone.has-file {
-            border-color: #48bb78;
-            background: #f0fff4;
+            border-color: #23D389;
+            background: #0d1f17;
         }
 
         .drop-zone-icon {
@@ -92,22 +100,23 @@
         }
 
         .drop-zone h3 {
-            color: #2d3748;
+            color: #FFFFFF;
             margin-bottom: 10px;
+            font-weight: bold;
         }
 
         .drop-zone p {
-            color: #718096;
+            color: #CBD0DB;
             font-size: 14px;
         }
 
         .file-name {
             margin-top: 15px;
             padding: 10px;
-            background: white;
+            background: #23D389;
             border-radius: 6px;
             font-weight: 600;
-            color: #2d3748;
+            color: #000000;
             display: none;
         }
 
@@ -115,9 +124,9 @@
             width: 100%;
             padding: 16px;
             font-size: 18px;
-            font-weight: 600;
-            color: white;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-weight: bold;
+            color: #000000;
+            background: #23D389;
             border: none;
             border-radius: 8px;
             cursor: pointer;
@@ -126,19 +135,22 @@
 
         .process-button:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 10px 20px rgba(35, 211, 137, 0.4);
+            background: #1fc07a;
         }
 
         .process-button:disabled {
-            opacity: 0.5;
+            opacity: 0.4;
             cursor: not-allowed;
+            background: #CBD0DB;
         }
 
         .results-section {
-            background: white;
+            background: #1a1a1a;
             border-radius: 12px;
             padding: 30px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 40px rgba(35, 211, 137, 0.1);
+            border: 1px solid #2a2a2a;
             display: none;
         }
 
@@ -147,13 +159,21 @@
         }
 
         .success-banner {
-            background: #f0fff4;
-            border: 2px solid #48bb78;
+            background: #0d1f17;
+            border: 2px solid #23D389;
             border-radius: 8px;
             padding: 20px;
             margin-bottom: 20px;
             display: flex;
             align-items: center;
+        }
+
+        .success-banner h2 {
+            color: #23D389;
+        }
+
+        .success-banner p {
+            color: #CBD0DB;
         }
 
         .success-banner .icon {
@@ -162,11 +182,19 @@
         }
 
         .error-banner {
-            background: #fff5f5;
-            border: 2px solid #f56565;
+            background: #1f0d0d;
+            border: 2px solid #D04E59;
             border-radius: 8px;
             padding: 20px;
             margin-bottom: 20px;
+        }
+
+        .error-banner h2 {
+            color: #D04E59;
+        }
+
+        .error-banner p {
+            color: #CBD0DB;
         }
 
         .stats-grid {
@@ -177,21 +205,22 @@
         }
 
         .stat-card {
-            background: #f7fafc;
+            background: #0a0a0a;
             padding: 20px;
             border-radius: 8px;
             text-align: center;
+            border: 1px solid #2a2a2a;
         }
 
         .stat-card .value {
             font-size: 32px;
             font-weight: bold;
-            color: #667eea;
+            color: #23D389;
             margin-bottom: 5px;
         }
 
         .stat-card .label {
-            color: #718096;
+            color: #CBD0DB;
             font-size: 14px;
         }
 
@@ -200,13 +229,14 @@
         }
 
         .log-section h3 {
-            color: #2d3748;
+            color: #FFFFFF;
             margin-bottom: 10px;
+            font-weight: bold;
         }
 
         .log-output {
-            background: #1a202c;
-            color: #68d391;
+            background: #0a0a0a;
+            color: #23D389;
             padding: 20px;
             border-radius: 8px;
             font-family: 'Courier New', monospace;
@@ -214,28 +244,30 @@
             max-height: 400px;
             overflow-y: auto;
             white-space: pre-wrap;
+            border: 1px solid #2a2a2a;
         }
 
         .download-button {
             display: inline-block;
             padding: 12px 30px;
-            background: #48bb78;
-            color: white;
+            background: #23D389;
+            color: #000000;
             text-decoration: none;
             border-radius: 8px;
-            font-weight: 600;
+            font-weight: bold;
             margin-top: 20px;
             transition: all 0.3s;
         }
 
         .download-button:hover {
-            background: #38a169;
+            background: #1fc07a;
             transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(35, 211, 137, 0.4);
         }
 
         .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
+            border: 4px solid #2a2a2a;
+            border-top: 4px solid #23D389;
             border-radius: 50%;
             width: 40px;
             height: 40px;
@@ -267,7 +299,8 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>📊 Balance Updater</h1>
+            <img src="/static/bullish_logo.png" alt="Bullish Logo" class="logo">
+            <h1>Activity Aggregator Update</h1>
             <p>Drop your files and process them automatically</p>
         </div>
 
