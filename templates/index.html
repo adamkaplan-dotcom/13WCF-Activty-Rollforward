@@ -30,8 +30,11 @@
         }
 
         .header .logo {
-            width: 150px;
+            width: 200px;
             margin-bottom: 20px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .header h1 {
@@ -57,7 +60,7 @@
 
         .upload-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-columns: 1fr 1fr;
             gap: 20px;
             margin-bottom: 30px;
         }
@@ -299,7 +302,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <img src="/static/bullish_logo.png" alt="Bullish Logo" class="logo">
+            <img src="/static/bullish_logo_white.jpg" alt="Bullish Logo" class="logo">
             <h1>Activity Aggregator Update</h1>
             <p>Drop your files and process them automatically</p>
         </div>
@@ -331,6 +334,15 @@
                     <p style="font-size: 12px; margin-top: 5px; color: #a0aec0;">(Optional - BTH Financing Schedule)</p>
                     <div class="file-name" id="bthFileName"></div>
                     <input type="file" id="bthFileInput" accept=".xlsx,.xls" style="display: none;">
+                </div>
+
+                <div class="drop-zone" id="aggregatorDropZone" style="opacity: 0.9;">
+                    <div class="drop-zone-icon">📊</div>
+                    <h3>Activity Aggregator File</h3>
+                    <p>Drag & drop or click to select</p>
+                    <p style="font-size: 12px; margin-top: 5px; color: #a0aec0;">(Optional - Updates Stacked Activity Tab)</p>
+                    <div class="file-name" id="aggregatorFileName"></div>
+                    <input type="file" id="aggregatorFileInput" accept=".xlsx,.xls" style="display: none;">
                 </div>
             </div>
 
@@ -372,6 +384,7 @@
         let weeklyFile = null;
         let rollforwardFile = null;
         let bthFile = null;
+        let aggregatorFile = null;
 
         // Setup drop zones
         setupDropZone('weeklyDropZone', 'weeklyFileInput', 'weeklyFileName', (file) => {
@@ -387,6 +400,11 @@
         setupDropZone('bthDropZone', 'bthFileInput', 'bthFileName', (file) => {
             bthFile = file;
             // BTH file is optional, don't need to check
+        });
+
+        setupDropZone('aggregatorDropZone', 'aggregatorFileInput', 'aggregatorFileName', (file) => {
+            aggregatorFile = file;
+            // Aggregator file is optional, don't need to check
         });
 
         function setupDropZone(dropZoneId, inputId, fileNameId, callback) {
@@ -445,6 +463,9 @@
             formData.append('rollforward_file', rollforwardFile);
             if (bthFile) {
                 formData.append('bth_file', bthFile);
+            }
+            if (aggregatorFile) {
+                formData.append('aggregator_file', aggregatorFile);
             }
 
             const button = document.getElementById('processButton');

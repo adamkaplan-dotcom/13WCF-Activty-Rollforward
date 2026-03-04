@@ -223,12 +223,30 @@ def process_files(weekly_file_path, rollforward_file_path, bth_file_path=None):
         log.append("STEP 4: Copying formatting from previous column")
         log.append("="*60)
 
+        # Copy formatting from previous column to new column
+        from copy import copy
+        source_col = last_col_with_date
+        log.append(f"Copying formatting from column {openpyxl.utils.get_column_letter(source_col)} to {openpyxl.utils.get_column_letter(new_col)}...")
+
+        for row in range(1, sheet_target.max_row + 1):
+            source_cell = sheet_target.cell(row, source_col)
+            target_cell = sheet_target.cell(row, new_col)
+
+            # Copy all formatting attributes
+            if source_cell.has_style:
+                target_cell.font = copy(source_cell.font)
+                target_cell.border = copy(source_cell.border)
+                target_cell.fill = copy(source_cell.fill)
+                target_cell.number_format = copy(source_cell.number_format)
+                target_cell.protection = copy(source_cell.protection)
+                target_cell.alignment = copy(source_cell.alignment)
+
         # Copy column width
         source_col_letter = openpyxl.utils.get_column_letter(last_col_with_date)
         target_col_letter = openpyxl.utils.get_column_letter(new_col)
         sheet_target.column_dimensions[target_col_letter].width = sheet_target.column_dimensions[source_col_letter].width
 
-        log.append(f"Copied column width from {source_col_letter}")
+        log.append(f"✓ Copied formatting and column width from {source_col_letter}")
 
         log.append("")
         log.append("="*60)
@@ -407,10 +425,28 @@ def process_files(weekly_file_path, rollforward_file_path, bth_file_path=None):
                 log.append(f"Will copy ENTIRE column {openpyxl.utils.get_column_letter(cockpit_prev_col)} → {openpyxl.utils.get_column_letter(cockpit_new_col)}")
                 log.append(f"Copying column {openpyxl.utils.get_column_letter(cockpit_prev_col)} → {openpyxl.utils.get_column_letter(cockpit_new_col)}")
 
-                # Copy column width only (skip cell-by-cell formatting for speed)
+                # Copy formatting from previous column
+                from copy import copy
+                log.append("Copying formatting from source column...")
+                for row in range(1, sheet_cockpit.max_row + 1):
+                    source_cell = sheet_cockpit.cell(row, cockpit_prev_col)
+                    target_cell = sheet_cockpit.cell(row, cockpit_new_col)
+
+                    # Copy formatting
+                    if source_cell.has_style:
+                        target_cell.font = copy(source_cell.font)
+                        target_cell.border = copy(source_cell.border)
+                        target_cell.fill = copy(source_cell.fill)
+                        target_cell.number_format = copy(source_cell.number_format)
+                        target_cell.protection = copy(source_cell.protection)
+                        target_cell.alignment = copy(source_cell.alignment)
+
+                # Copy column width
                 cockpit_source_letter = openpyxl.utils.get_column_letter(cockpit_prev_col)
                 cockpit_target_letter = openpyxl.utils.get_column_letter(cockpit_new_col)
                 sheet_cockpit.column_dimensions[cockpit_target_letter].width = sheet_cockpit.column_dimensions[cockpit_source_letter].width
+
+                log.append("✓ Formatting copied")
 
                 # Copy formulas/values from previous column to new column (optimized)
                 log.append("Copying formulas and values...")
@@ -586,14 +622,8 @@ def process_files(weekly_file_path, rollforward_file_path, bth_file_path=None):
                     log.append(f"Copying 6 columns: {openpyxl.utils.get_column_letter(source_start_col)}-{openpyxl.utils.get_column_letter(source_end_col)} → {openpyxl.utils.get_column_letter(target_start_col)}-{openpyxl.utils.get_column_letter(target_end_col)}")
                     log.append(f"Formula adjustment offset: {column_offset} columns")
 
-                    # Copy column widths
-                    for i in range(6):
-                        source_col_letter = openpyxl.utils.get_column_letter(source_start_col + i)
-                        target_col_letter = openpyxl.utils.get_column_letter(target_start_col + i)
-                        if source_col_letter in sheet_rollforward_check.column_dimensions:
-                            sheet_rollforward_check.column_dimensions[target_col_letter].width = sheet_rollforward_check.column_dimensions[source_col_letter].width
-
-                    # Copy cell values and formulas
+                    # Copy formatting and values
+                    from copy import copy
                     cells_copied = 0
                     formulas_copied = 0
                     array_formulas_skipped = 0
@@ -601,14 +631,26 @@ def process_files(weekly_file_path, rollforward_file_path, bth_file_path=None):
                     # Process reasonable number of rows
                     max_row = min(sheet_rollforward_check.max_row, 1000)
 
+                    log.append("Copying formatting and values...")
+
                     for row in range(1, max_row + 1):
                         for i in range(6):  # 6 columns
                             source_col = source_start_col + i
                             target_col = target_start_col + i
 
                             source_cell = sheet_rollforward_check.cell(row, source_col)
+                            target_cell = sheet_rollforward_check.cell(row, target_col)
 
-                            # Skip empty cells
+                            # Copy formatting
+                            if source_cell.has_style:
+                                target_cell.font = copy(source_cell.font)
+                                target_cell.border = copy(source_cell.border)
+                                target_cell.fill = copy(source_cell.fill)
+                                target_cell.number_format = copy(source_cell.number_format)
+                                target_cell.protection = copy(source_cell.protection)
+                                target_cell.alignment = copy(source_cell.alignment)
+
+                            # Skip empty cells for value copy
                             if source_cell.value is None:
                                 continue
 
@@ -616,8 +658,6 @@ def process_files(weekly_file_path, rollforward_file_path, bth_file_path=None):
                             if isinstance(source_cell.value, ArrayFormula):
                                 array_formulas_skipped += 1
                                 continue
-
-                            target_cell = sheet_rollforward_check.cell(row, target_col)
 
                             # Copy formula with adjustment or copy value
                             if isinstance(source_cell.value, str) and source_cell.value.startswith('='):
@@ -640,6 +680,13 @@ def process_files(weekly_file_path, rollforward_file_path, bth_file_path=None):
 
                             cells_copied += 1
 
+                    # Copy column widths
+                    for i in range(6):
+                        source_col_letter = openpyxl.utils.get_column_letter(source_start_col + i)
+                        target_col_letter = openpyxl.utils.get_column_letter(target_start_col + i)
+                        if source_col_letter in sheet_rollforward_check.column_dimensions:
+                            sheet_rollforward_check.column_dimensions[target_col_letter].width = sheet_rollforward_check.column_dimensions[source_col_letter].width
+
                     if array_formulas_skipped > 0:
                         log.append(f"⚠ Skipped {array_formulas_skipped} array formulas (not supported)")
 
@@ -651,14 +698,26 @@ def process_files(weekly_file_path, rollforward_file_path, bth_file_path=None):
 
                     # Check if columns exist
                     if mq_col <= sheet_rollforward_check.max_column and mw_col <= sheet_rollforward_check.max_column:
-                        log.append(f"Copying formulas from MQ → MW (rows 14-97)...")
+                        log.append(f"Copying formulas and formatting from MQ → MW (rows 14-97)...")
 
-                        # Copy column width
-                        if 'MQ' in sheet_rollforward_check.column_dimensions:
-                            sheet_rollforward_check.column_dimensions['MW'].width = sheet_rollforward_check.column_dimensions['MQ'].width
-
+                        from copy import copy
                         mw_formulas_copied = 0
 
+                        # First copy formatting for entire column
+                        for row in range(1, max_row + 1):
+                            source_cell = sheet_rollforward_check.cell(row, mq_col)
+                            target_cell = sheet_rollforward_check.cell(row, mw_col)
+
+                            # Copy formatting
+                            if source_cell.has_style:
+                                target_cell.font = copy(source_cell.font)
+                                target_cell.border = copy(source_cell.border)
+                                target_cell.fill = copy(source_cell.fill)
+                                target_cell.number_format = copy(source_cell.number_format)
+                                target_cell.protection = copy(source_cell.protection)
+                                target_cell.alignment = copy(source_cell.alignment)
+
+                        # Then copy formulas for rows 14-97
                         for row in range(14, 98):  # Rows 14-97
                             source_cell = sheet_rollforward_check.cell(row, mq_col)
 
@@ -688,7 +747,11 @@ def process_files(weekly_file_path, rollforward_file_path, bth_file_path=None):
                             else:
                                 target_cell.value = source_cell.value
 
-                        log.append(f"✓ Copied {mw_formulas_copied} formulas from MQ → MW")
+                        # Copy column width
+                        if 'MQ' in sheet_rollforward_check.column_dimensions:
+                            sheet_rollforward_check.column_dimensions['MW'].width = sheet_rollforward_check.column_dimensions['MQ'].width
+
+                        log.append(f"✓ Copied {mw_formulas_copied} formulas and formatting from MQ → MW")
                     else:
                         log.append(f"⚠ Columns MQ or MW not found")
 

@@ -1,6 +1,26 @@
-2.3
+2.5
 
 # Version History
+
+## v2.5 (2026-03-04)
+- **NEW FEATURE**: Added Stacked Activity tab update functionality
+- New 4th file upload: Activity Aggregator (optional)
+- Reads "Alteryx_Output" tab from Activity Aggregator file
+- Filters rows where "Manual User Check" != "Exclude - Pass"
+- Appends columns A-X (24 columns) to "Stacked Activity" tab in Activity Rollforward
+- Uses streaming XML approach for memory efficiency with large files
+- Integrated stacked_activity_updater.py module with full logging
+- Updated UI to 2x2 grid layout for 4 file uploads
+- Activity Aggregator file is optional (user can choose to update Stacked Activity or not)
+
+## v2.4 (2026-03-04)
+- **CRITICAL FIX**: Restored cell-by-cell formatting copy for all tabs
+- Beginning Balances: Column formatting now matches source column exactly
+- Cockpit: Column formatting now matches source column exactly
+- Rollforward Check: All 6 inserted columns have proper formatting from source
+- MW column now has formatting copied from MQ column
+- Fixes missing number formats, borders, fills, fonts, and alignment
+- Output files now match reference file formatting exactly
 
 ## v2.3 (2026-03-03)
 - **NEW FEATURE**: Added MQ → MW formula copy for Rollforward Check tab
