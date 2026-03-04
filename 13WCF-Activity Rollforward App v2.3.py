@@ -7,6 +7,7 @@ A local web app to process USDx balance files and update Activity Rollforward fi
 from flask import Flask, render_template, request, send_file, jsonify
 import os
 import openpyxl
+from openpyxl.worksheet.formula import ArrayFormula
 from datetime import datetime
 from werkzeug.utils import secure_filename
 import traceback
@@ -238,18 +239,24 @@ def process_files(weekly_file_path, rollforward_file_path, bth_file_path=None):
         formula_source_cell = sheet_target.cell(10, last_col_with_date)
         formula_target_cell = sheet_target.cell(10, new_col)
 
-        # Check if source has a formula
-        if formula_source_cell.value and isinstance(formula_source_cell.value, str) and formula_source_cell.value.startswith('='):
+        # Check if source has a formula (skip array formulas)
+        if (formula_source_cell.value and
+            not isinstance(formula_source_cell.value, ArrayFormula) and
+            isinstance(formula_source_cell.value, str) and
+            formula_source_cell.value.startswith('=')):
             # Adjust column references in formula
-            adjusted_formula = adjust_formula_columns(formula_source_cell.value, column_offset=1)
-            formula_target_cell.value = adjusted_formula
-            log.append(f"Copied formula from {openpyxl.utils.get_column_letter(last_col_with_date)}10 to {openpyxl.utils.get_column_letter(new_col)}10")
-            log.append(f"  Original: {formula_source_cell.value}")
-            log.append(f"  Adjusted: {adjusted_formula}")
+            try:
+                adjusted_formula = adjust_formula_columns(formula_source_cell.value, column_offset=1)
+                if isinstance(adjusted_formula, str) and adjusted_formula.startswith('='):
+                    formula_target_cell.value = adjusted_formula
+                    log.append(f"Copied formula from {openpyxl.utils.get_column_letter(last_col_with_date)}10 to {openpyxl.utils.get_column_letter(new_col)}10")
+                else:
+                    log.append(f"Formula adjustment failed for row 10")
+            except Exception:
+                log.append(f"Error adjusting formula in row 10")
         else:
             # If no formula, just note it
-            log.append(f"No formula found in row 10, column {openpyxl.utils.get_column_letter(last_col_with_date)}")
-            log.append(f"Cell value: {formula_source_cell.value}")
+            log.append(f"No valid formula found in row 10, column {openpyxl.utils.get_column_letter(last_col_with_date)}")
 
         log.append("")
         log.append("="*60)
@@ -306,8 +313,8 @@ def process_files(weekly_file_path, rollforward_file_path, bth_file_path=None):
         for row in range(12, 21):  # 12 to 20 inclusive
             source_cell = sheet_target.cell(row, prev_col)
 
-            # Skip empty cells
-            if source_cell.value is None:
+            # Skip empty cells and array formulas
+            if source_cell.value is None or isinstance(source_cell.value, ArrayFormula):
                 continue
 
             target_cell = sheet_target.cell(row, new_col)
@@ -315,11 +322,17 @@ def process_files(weekly_file_path, rollforward_file_path, bth_file_path=None):
             # Copy formula or value
             if isinstance(source_cell.value, str) and source_cell.value.startswith('='):
                 # Adjust column references in formula
-                adjusted_formula = adjust_formula_columns(source_cell.value, column_offset=1)
-                target_cell.value = adjusted_formula
-                formulas_copied += 1
-                if adjusted_formula != source_cell.value:
-                    formulas_adjusted += 1
+                try:
+                    adjusted_formula = adjust_formula_columns(source_cell.value, column_offset=1)
+                    if isinstance(adjusted_formula, str) and adjusted_formula.startswith('='):
+                        target_cell.value = adjusted_formula
+                        formulas_copied += 1
+                        if adjusted_formula != source_cell.value:
+                            formulas_adjusted += 1
+                    else:
+                        continue
+                except Exception:
+                    continue
             else:
                 target_cell.value = source_cell.value
 
@@ -328,8 +341,8 @@ def process_files(weekly_file_path, rollforward_file_path, bth_file_path=None):
         for row in range(148, 240):  # 148 to 239 inclusive
             source_cell = sheet_target.cell(row, prev_col)
 
-            # Skip empty cells
-            if source_cell.value is None:
+            # Skip empty cells and array formulas
+            if source_cell.value is None or isinstance(source_cell.value, ArrayFormula):
                 continue
 
             target_cell = sheet_target.cell(row, new_col)
@@ -337,11 +350,17 @@ def process_files(weekly_file_path, rollforward_file_path, bth_file_path=None):
             # Copy formula or value
             if isinstance(source_cell.value, str) and source_cell.value.startswith('='):
                 # Adjust column references in formula
-                adjusted_formula = adjust_formula_columns(source_cell.value, column_offset=1)
-                target_cell.value = adjusted_formula
-                formulas_copied_148 += 1
-                if adjusted_formula != source_cell.value:
-                    formulas_adjusted += 1
+                try:
+                    adjusted_formula = adjust_formula_columns(source_cell.value, column_offset=1)
+                    if isinstance(adjusted_formula, str) and adjusted_formula.startswith('='):
+                        target_cell.value = adjusted_formula
+                        formulas_copied_148 += 1
+                        if adjusted_formula != source_cell.value:
+                            formulas_adjusted += 1
+                    else:
+                        continue
+                except Exception:
+                    continue
             else:
                 target_cell.value = source_cell.value
 
@@ -404,8 +423,8 @@ def process_files(weekly_file_path, rollforward_file_path, bth_file_path=None):
                 for row in range(1, max_row + 1):
                     source_cell = sheet_cockpit.cell(row, cockpit_prev_col)
 
-                    # Skip empty cells
-                    if source_cell.value is None:
+                    # Skip empty cells and array formulas
+                    if source_cell.value is None or isinstance(source_cell.value, ArrayFormula):
                         continue
 
                     target_cell = sheet_cockpit.cell(row, cockpit_new_col)
@@ -413,9 +432,15 @@ def process_files(weekly_file_path, rollforward_file_path, bth_file_path=None):
                     # Copy formula or value
                     if isinstance(source_cell.value, str) and source_cell.value.startswith('='):
                         # Adjust column references in formula
-                        adjusted_formula = adjust_formula_columns(source_cell.value, column_offset=1)
-                        target_cell.value = adjusted_formula
-                        cockpit_formulas_copied += 1
+                        try:
+                            adjusted_formula = adjust_formula_columns(source_cell.value, column_offset=1)
+                            if isinstance(adjusted_formula, str) and adjusted_formula.startswith('='):
+                                target_cell.value = adjusted_formula
+                                cockpit_formulas_copied += 1
+                            else:
+                                continue
+                        except Exception:
+                            continue
                     else:
                         target_cell.value = source_cell.value
                         cockpit_values_copied += 1
@@ -571,6 +596,7 @@ def process_files(weekly_file_path, rollforward_file_path, bth_file_path=None):
                     # Copy cell values and formulas
                     cells_copied = 0
                     formulas_copied = 0
+                    array_formulas_skipped = 0
 
                     # Process reasonable number of rows
                     max_row = min(sheet_rollforward_check.max_row, 1000)
@@ -586,19 +612,85 @@ def process_files(weekly_file_path, rollforward_file_path, bth_file_path=None):
                             if source_cell.value is None:
                                 continue
 
+                            # Skip array formulas (openpyxl can't write these properly)
+                            if isinstance(source_cell.value, ArrayFormula):
+                                array_formulas_skipped += 1
+                                continue
+
                             target_cell = sheet_rollforward_check.cell(row, target_col)
 
                             # Copy formula with adjustment or copy value
                             if isinstance(source_cell.value, str) and source_cell.value.startswith('='):
-                                adjusted_formula = adjust_formula_columns(source_cell.value, column_offset=column_offset)
-                                target_cell.value = adjusted_formula
-                                formulas_copied += 1
+                                # Validate and adjust formula
+                                try:
+                                    adjusted_formula = adjust_formula_columns(source_cell.value, column_offset=column_offset)
+                                    # Only write if it's a valid string formula
+                                    if isinstance(adjusted_formula, str) and adjusted_formula.startswith('='):
+                                        target_cell.value = adjusted_formula
+                                        formulas_copied += 1
+                                    else:
+                                        # Invalid formula, skip
+                                        continue
+                                except Exception:
+                                    # Formula adjustment failed, skip this cell
+                                    continue
                             else:
+                                # Copy non-formula value
                                 target_cell.value = source_cell.value
 
                             cells_copied += 1
 
+                    if array_formulas_skipped > 0:
+                        log.append(f"⚠ Skipped {array_formulas_skipped} array formulas (not supported)")
+
                     log.append(f"✓ Copied {cells_copied} cells, {formulas_copied} formulas adjusted")
+
+                    # STEP 11F: Copy formulas from MQ to MW (including array formulas)
+                    mq_col = openpyxl.utils.column_index_from_string('MQ')
+                    mw_col = openpyxl.utils.column_index_from_string('MW')
+
+                    # Check if columns exist
+                    if mq_col <= sheet_rollforward_check.max_column and mw_col <= sheet_rollforward_check.max_column:
+                        log.append(f"Copying formulas from MQ → MW (rows 14-97)...")
+
+                        # Copy column width
+                        if 'MQ' in sheet_rollforward_check.column_dimensions:
+                            sheet_rollforward_check.column_dimensions['MW'].width = sheet_rollforward_check.column_dimensions['MQ'].width
+
+                        mw_formulas_copied = 0
+
+                        for row in range(14, 98):  # Rows 14-97
+                            source_cell = sheet_rollforward_check.cell(row, mq_col)
+
+                            if source_cell.value is None:
+                                continue
+
+                            target_cell = sheet_rollforward_check.cell(row, mw_col)
+
+                            # Handle ArrayFormula - extract text and convert to regular formula
+                            if isinstance(source_cell.value, ArrayFormula):
+                                if hasattr(source_cell.value, 'text') and source_cell.value.text:
+                                    formula_text = source_cell.value.text
+                                    # Replace MQ$ references with MW$
+                                    adjusted_formula = formula_text.replace('MQ$', 'MW$')
+                                    # Ensure it starts with =
+                                    if not adjusted_formula.startswith('='):
+                                        adjusted_formula = '=' + adjusted_formula
+                                    target_cell.value = adjusted_formula
+                                    mw_formulas_copied += 1
+                            # Handle regular formulas
+                            elif isinstance(source_cell.value, str) and source_cell.value.startswith('='):
+                                # Replace MQ$ references with MW$
+                                adjusted_formula = source_cell.value.replace('MQ$', 'MW$')
+                                target_cell.value = adjusted_formula
+                                mw_formulas_copied += 1
+                            # Copy other values
+                            else:
+                                target_cell.value = source_cell.value
+
+                        log.append(f"✓ Copied {mw_formulas_copied} formulas from MQ → MW")
+                    else:
+                        log.append(f"⚠ Columns MQ or MW not found")
 
                     # STEP 11F: Set column widths for MT through MX (16.67)
                     # After insertion, MT is now at position cumulative_col_original + 6
@@ -694,6 +786,8 @@ def process_files(weekly_file_path, rollforward_file_path, bth_file_path=None):
             log.append(f"✓ Rollforward Check: Inserted 6 columns before Cumulative")
             if 'cells_copied' in locals():
                 log.append(f"✓ Rollforward Check: Copied {cells_copied} cells, {formulas_copied} formulas")
+            if 'mw_formulas_copied' in locals():
+                log.append(f"✓ Rollforward Check: Copied {mw_formulas_copied} formulas from MQ → MW")
             log.append(f"✓ Rollforward Check: Set column widths MT-MX to 16.67")
 
         log.append(f"✓ Process completed successfully!")

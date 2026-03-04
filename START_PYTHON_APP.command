@@ -48,7 +48,7 @@ echo "Press CTRL+C to stop the server"
 echo "=========================================="
 echo ""
 
-python3 "13WCF-Activity Rollforward App v2.1.py"
+python3 "13WCF-Activity Rollforward App v2.3.py"
 
 # Deactivate when done
 deactivate

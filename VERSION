@@ -1,6 +1,22 @@
-2.1
+2.3
 
 # Version History
+
+## v2.3 (2026-03-03)
+- **NEW FEATURE**: Added MQ → MW formula copy for Rollforward Check tab
+- Copies formulas from MQ column to MW column (rows 14-97)
+- Handles ArrayFormula objects by extracting .text property
+- Replaces MQ$ references with MW$ (e.g., MQ$9 becomes MW$9, MQ$10 becomes MW$10)
+- Formulas written as regular strings (not ArrayFormula objects) to avoid corruption
+- MW column now has proper formulas referencing MW date cell
+
+## v2.2 (2026-03-03)
+- **CRITICAL FIX**: Fixed Excel file corruption caused by array formulas
+- Now properly skips ArrayFormula objects that openpyxl can't write correctly
+- Added validation for all formula writes (must be valid string starting with =)
+- Added try-catch around formula adjustments to prevent crashes
+- Excel files now open without repair warnings
+- Formula errors logged but don't stop processing
 
 ## v2.1 (2026-03-03)
 - **CRITICAL FIX**: Corrected Rollforward Check tab processing to match reference file
