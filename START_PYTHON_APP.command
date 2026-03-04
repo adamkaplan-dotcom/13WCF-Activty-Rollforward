@@ -28,7 +28,7 @@ source python_venv/bin/activate
 # Install/upgrade dependencies
 echo "Installing dependencies..."
 pip install -q --upgrade pip
-pip install -q Flask==3.0.0 openpyxl==3.1.2 Werkzeug==3.0.1
+pip install -q -r requirements.txt
 
 # Create necessary directories
 mkdir -p uploads outputs
