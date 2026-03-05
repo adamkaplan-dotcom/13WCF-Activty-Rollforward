@@ -76,25 +76,53 @@
             border-radius: 8px;
             padding: 40px 20px;
             text-align: center;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
             cursor: pointer;
             background: #0a0a0a;
+            position: relative;
+        }
+
+        .drop-zone::before {
+            content: "📁 Drop file here or click to browse";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #CBD0DB;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            white-space: nowrap;
         }
 
         .drop-zone:hover {
             border-color: #23D389;
             background: #1a1a1a;
+            box-shadow: 0 0 20px rgba(35, 211, 137, 0.2);
         }
 
         .drop-zone.dragover {
             border-color: #23D389;
+            border-width: 3px;
             background: #1a3326;
-            transform: scale(1.02);
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(35, 211, 137, 0.4);
+        }
+
+        .drop-zone.dragover::before {
+            opacity: 1;
+        }
+
+        .drop-zone.dragover > * {
+            opacity: 0.3;
         }
 
         .drop-zone.has-file {
             border-color: #23D389;
+            border-style: solid;
             background: #0d1f17;
+            box-shadow: 0 0 15px rgba(35, 211, 137, 0.3);
         }
 
         .drop-zone-icon {
@@ -381,6 +409,14 @@
     </div>
 
     <script>
+        // Prevent default drag/drop behavior on the entire page
+        window.addEventListener('dragover', (e) => {
+            e.preventDefault();
+        }, false);
+        window.addEventListener('drop', (e) => {
+            e.preventDefault();
+        }, false);
+
         let weeklyFile = null;
         let rollforwardFile = null;
         let bthFile = null;
@@ -414,25 +450,40 @@
 
             dropZone.addEventListener('click', () => fileInput.click());
 
-            dropZone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                dropZone.classList.add('dragover');
+            // Prevent default drag behaviors on the entire document
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }, false);
             });
 
-            dropZone.addEventListener('dragleave', () => {
-                dropZone.classList.remove('dragover');
+            // Highlight drop zone when item is dragged over it
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => {
+                    dropZone.classList.add('dragover');
+                }, false);
             });
 
+            // Remove highlight when item leaves drop zone
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    // Only remove highlight if leaving the drop zone itself, not a child element
+                    if (e.target === dropZone || eventName === 'drop') {
+                        dropZone.classList.remove('dragover');
+                    }
+                }, false);
+            });
+
+            // Handle dropped files
             dropZone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                dropZone.classList.remove('dragover');
-
                 const files = e.dataTransfer.files;
                 if (files.length > 0) {
                     handleFile(files[0], dropZone, fileName, callback);
                 }
-            });
+            }, false);
 
+            // Handle file selection via click
             fileInput.addEventListener('change', (e) => {
                 if (e.target.files.length > 0) {
                     handleFile(e.target.files[0], dropZone, fileName, callback);
