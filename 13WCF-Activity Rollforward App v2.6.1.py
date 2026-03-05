@@ -18,7 +18,7 @@ import fva_data_updater
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['OUTPUT_FOLDER'] = 'outputs'
-app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100MB max file size
+app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024 * 1024  # 1GB max total upload size (for all 7 files combined)
 
 ALLOWED_EXTENSIONS = {'xlsx', 'xls'}
 

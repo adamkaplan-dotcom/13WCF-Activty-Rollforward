@@ -1,6 +1,12 @@
-2.6
+2.6.1
 
 # Version History
+
+## v2.6.1 (2026-03-04)
+- **BUG FIX**: Increased MAX_CONTENT_LENGTH from 100MB to 1GB
+- Fixes "413 Request Entity Too Large" error when uploading multiple large files
+- Now supports uploading all 7 files simultaneously without size restrictions
+- Typical use case: Activity Aggregator (50-60MB) + Activity Rollforward (30-40MB) + other files
 
 ## v2.6 (2026-03-04)
 - **NEW FEATURE**: Added FvA Data Tab Update functionality (final processing step)
