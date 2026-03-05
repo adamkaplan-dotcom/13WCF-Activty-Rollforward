@@ -1,6 +1,16 @@
-2.5
+2.6
 
 # Version History
+
+## v2.6 (2026-03-04)
+- **NEW FEATURE**: Added FvA Data Tab Update functionality (final processing step)
+- New 3 optional file uploads: 1-Week, 4-Week, 13-Week FvA files (13WCF files)
+- Reads "13WCF - Consol" sheet from each FvA file
+- Overwrites corresponding FvA Data Tabs in Activity Rollforward
+- Created fva_data_updater.py module with streaming XML approach
+- Integrated as Step 12 (final step) after Stacked Activity update
+- Updated UI to responsive grid layout for 7 total file uploads
+- All processing steps now complete: Balance Update → Cockpit → Rollforward Check → Stacked Activity → FvA Data
 
 ## v2.5 (2026-03-04)
 - **NEW FEATURE**: Added Stacked Activity tab update functionality

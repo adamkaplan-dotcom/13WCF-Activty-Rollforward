@@ -13,6 +13,7 @@ from werkzeug.utils import secure_filename
 import traceback
 import re
 import stacked_activity_updater
+import fva_data_updater
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
@@ -119,7 +120,7 @@ def adjust_formula_columns(formula, column_offset=1):
 
     return adjusted_formula
 
-def process_files(weekly_file_path, rollforward_file_path, bth_file_path=None, aggregator_file_path=None):
+def process_files(weekly_file_path, rollforward_file_path, bth_file_path=None, aggregator_file_path=None, fva_files=None):
     """
     Main processing function:
     1. Read column K (Current Week) from USDx Balances tab (K10 header)
@@ -129,6 +130,7 @@ def process_files(weekly_file_path, rollforward_file_path, bth_file_path=None, a
     5. Process Cockpit tab (copy formulas from last column to next)
     6. If BTH file provided, match date and paste Total BTH Financing to Cockpit row 20
     7. If Activity Aggregator provided, append filtered data to Stacked Activity tab
+    8. If FvA files provided, update 1-Week/4-Week/13-Week FvA Data Tabs
     """
 
     log = []
@@ -872,6 +874,23 @@ def process_files(weekly_file_path, rollforward_file_path, bth_file_path=None, a
                 log.append(f"⚠ Warning: Stacked Activity update failed: {sa_result.get('error', 'Unknown error')}")
                 log.append("  Continuing with other processing...")
 
+        # Process FvA Data Tabs if 13WCF files provided
+        if fva_files:
+            log.append("="*60)
+            log.append("STEP 12: Updating FvA Data Tabs")
+            log.append("="*60)
+
+            fva_result = fva_data_updater.update_fva_tabs(
+                output_path,
+                fva_files,
+                output_path,  # Update in place
+                log
+            )
+
+            if not fva_result['success']:
+                log.append(f"⚠ Warning: FvA update failed: {fva_result.get('error', 'Unknown error')}")
+                log.append("  Continuing with other processing...")
+
         log.append(f"✓ Process completed successfully!")
         log.append("="*60)
 
@@ -913,6 +932,9 @@ def upload_files():
         rollforward_file = request.files['rollforward_file']
         bth_file = request.files.get('bth_file')  # Optional
         aggregator_file = request.files.get('aggregator_file')  # Optional
+        fva_1week = request.files.get('fva_1week')  # Optional
+        fva_4week = request.files.get('fva_4week')  # Optional
+        fva_13week = request.files.get('fva_13week')  # Optional
 
         # Check if required files are selected
         if weekly_file.filename == '' or rollforward_file.filename == '':
@@ -927,6 +949,15 @@ def upload_files():
 
         if aggregator_file and aggregator_file.filename != '' and not allowed_file(aggregator_file.filename):
             return jsonify({'success': False, 'error': 'Only .xlsx files are allowed for Activity Aggregator file'})
+
+        if fva_1week and fva_1week.filename != '' and not allowed_file(fva_1week.filename):
+            return jsonify({'success': False, 'error': 'Only .xlsx files are allowed for 1-Week FvA file'})
+
+        if fva_4week and fva_4week.filename != '' and not allowed_file(fva_4week.filename):
+            return jsonify({'success': False, 'error': 'Only .xlsx files are allowed for 4-Week FvA file'})
+
+        if fva_13week and fva_13week.filename != '' and not allowed_file(fva_13week.filename):
+            return jsonify({'success': False, 'error': 'Only .xlsx files are allowed for 13-Week FvA file'})
 
         # Save uploaded files
         weekly_filename = secure_filename(weekly_file.filename)
@@ -952,8 +983,28 @@ def upload_files():
             aggregator_path = os.path.join(app.config['UPLOAD_FOLDER'], aggregator_filename)
             aggregator_file.save(aggregator_path)
 
+        # Save FvA files if provided
+        fva_paths = {}
+        if fva_1week and fva_1week.filename != '':
+            fva_1week_filename = secure_filename(fva_1week.filename)
+            fva_1week_path = os.path.join(app.config['UPLOAD_FOLDER'], fva_1week_filename)
+            fva_1week.save(fva_1week_path)
+            fva_paths['1week'] = fva_1week_path
+
+        if fva_4week and fva_4week.filename != '':
+            fva_4week_filename = secure_filename(fva_4week.filename)
+            fva_4week_path = os.path.join(app.config['UPLOAD_FOLDER'], fva_4week_filename)
+            fva_4week.save(fva_4week_path)
+            fva_paths['4week'] = fva_4week_path
+
+        if fva_13week and fva_13week.filename != '':
+            fva_13week_filename = secure_filename(fva_13week.filename)
+            fva_13week_path = os.path.join(app.config['UPLOAD_FOLDER'], fva_13week_filename)
+            fva_13week.save(fva_13week_path)
+            fva_paths['13week'] = fva_13week_path
+
         # Process the files
-        result = process_files(weekly_path, rollforward_path, bth_path, aggregator_path)
+        result = process_files(weekly_path, rollforward_path, bth_path, aggregator_path, fva_paths if fva_paths else None)
 
         # Clean up uploaded files
         os.remove(weekly_path)
@@ -962,6 +1013,9 @@ def upload_files():
             os.remove(bth_path)
         if aggregator_path and os.path.exists(aggregator_path):
             os.remove(aggregator_path)
+        for fva_path in fva_paths.values():
+            if os.path.exists(fva_path):
+                os.remove(fva_path)
 
         return jsonify(result)
 
