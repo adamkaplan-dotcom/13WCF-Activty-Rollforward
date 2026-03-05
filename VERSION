@@ -1,0 +1,166 @@
+2.6.1
+
+# Version History
+
+## v2.6.1 (2026-03-04)
+- **BUG FIX**: Increased MAX_CONTENT_LENGTH from 100MB to 1GB
+- Fixes "413 Request Entity Too Large" error when uploading multiple large files
+- Now supports uploading all 7 files simultaneously without size restrictions
+- Typical use case: Activity Aggregator (50-60MB) + Activity Rollforward (30-40MB) + other files
+
+## v2.6 (2026-03-04)
+- **NEW FEATURE**: Added FvA Data Tab Update functionality (final processing step)
+- New 3 optional file uploads: 1-Week, 4-Week, 13-Week FvA files (13WCF files)
+- Reads "13WCF - Consol" sheet from each FvA file
+- Overwrites corresponding FvA Data Tabs in Activity Rollforward
+- Created fva_data_updater.py module with streaming XML approach
+- Integrated as Step 12 (final step) after Stacked Activity update
+- Updated UI to responsive grid layout for 7 total file uploads
+- All processing steps now complete: Balance Update → Cockpit → Rollforward Check → Stacked Activity → FvA Data
+
+## v2.5 (2026-03-04)
+- **NEW FEATURE**: Added Stacked Activity tab update functionality
+- New 4th file upload: Activity Aggregator (optional)
+- Reads "Alteryx_Output" tab from Activity Aggregator file
+- Filters rows where "Manual User Check" != "Exclude - Pass"
+- Appends columns A-X (24 columns) to "Stacked Activity" tab in Activity Rollforward
+- Uses streaming XML approach for memory efficiency with large files
+- Integrated stacked_activity_updater.py module with full logging
+- Updated UI to 2x2 grid layout for 4 file uploads
+- Activity Aggregator file is optional (user can choose to update Stacked Activity or not)
+
+## v2.4 (2026-03-04)
+- **CRITICAL FIX**: Restored cell-by-cell formatting copy for all tabs
+- Beginning Balances: Column formatting now matches source column exactly
+- Cockpit: Column formatting now matches source column exactly
+- Rollforward Check: All 6 inserted columns have proper formatting from source
+- MW column now has formatting copied from MQ column
+- Fixes missing number formats, borders, fills, fonts, and alignment
+- Output files now match reference file formatting exactly
+
+## v2.3 (2026-03-03)
+- **NEW FEATURE**: Added MQ → MW formula copy for Rollforward Check tab
+- Copies formulas from MQ column to MW column (rows 14-97)
+- Handles ArrayFormula objects by extracting .text property
+- Replaces MQ$ references with MW$ (e.g., MQ$9 becomes MW$9, MQ$10 becomes MW$10)
+- Formulas written as regular strings (not ArrayFormula objects) to avoid corruption
+- MW column now has proper formulas referencing MW date cell
+
+## v2.2 (2026-03-03)
+- **CRITICAL FIX**: Fixed Excel file corruption caused by array formulas
+- Now properly skips ArrayFormula objects that openpyxl can't write correctly
+- Added validation for all formula writes (must be valid string starting with =)
+- Added try-catch around formula adjustments to prevent crashes
+- Excel files now open without repair warnings
+- Formula errors logged but don't stop processing
+
+## v2.1 (2026-03-03)
+- **CRITICAL FIX**: Corrected Rollforward Check tab processing to match reference file
+- Now inserts 6 columns before "Cumulative" (not 6 with 1 blank)
+- Copies ALL 6 columns from max value position (including blank column at end)
+- Formula adjustment properly accounts for column offset after insertion
+- Removed MW formula copy (not in reference file structure)
+- Fixed column width setting for MT-MX to use correct positions after insertion
+- All formulas now reference correct columns matching the pattern in reference file
+
+## v2.0 (2026-03-03)
+- **MAJOR PERFORMANCE UPGRADE**: Processing speed improved by 70-85%
+- Uses read_only=True mode for data workbook (3-5x faster loading)
+- Removed cell-by-cell formatting copies (was iterating 1000s of cells)
+- Now copies only column widths instead of all cell styles
+- Skips empty cells during iteration (50-70% fewer operations)
+- Capped row processing at 1000 rows for Cockpit/Rollforward Check
+- Removed VBA preservation (keep_vba=False) for faster loading
+- Typical processing time now: 10-30 seconds (was 1-3 minutes)
+
+## v1.9 (2026-03-03)
+- **PERFORMANCE**: Significantly improved processing speed for large files
+- Loads Activity Rollforward file with data_only=True only ONCE (was loading 3+ times)
+- Reuses pre-loaded workbook for Cockpit date scanning and Rollforward Check max value search
+- Reduced verbose logging (was logging every column/row, now only summaries)
+- Processing time reduced by ~50-70% for typical files
+- Updated UI with Bullish branding (green #23D389, black background, Arial font, logo)
+
+## v1.8 (2026-03-03)
+- **IMPROVEMENT**: Formula adjustment for Rollforward Check copied columns
+- Formulas in copied columns now reference the correct columns (adjusted by column offset)
+- Added MQ → MW formula copy with adjustments
+- Examples: MT8 references MN columns, MT14 references MQ columns, etc.
+- All formulas automatically adjusted using adjust_formula_columns() function
+- Enhanced logging shows number of formulas adjusted and MQ→MW copy count
+
+## v1.7 (2026-03-03)
+- **CRITICAL FIX**: Fixed Excel file corruption in Rollforward Check processing
+- Now properly adjusts source column positions after inserting columns (prevents invalid references)
+- Insert 6 columns (not 5): first column is blank, next 5 contain copied data
+- Finds max value column BEFORE insertion, then adjusts position if affected by insertion
+- Sets column widths MT-MX to 16.67 as required
+- Fixed formula copying to preserve Excel compatibility
+- Enhanced logging shows original vs adjusted column positions
+
+## v1.6 (2026-03-03)
+- **NEW FEATURE**: Added Rollforward Check tab processing
+- Finds column with "cumulative" in row 10
+- Inserts 5 new columns to the left of "cumulative" column
+- Finds column with greatest value in row 8
+- Copies that column + 4 columns to the right (5 columns total) into the newly inserted columns
+- Preserves all formatting, formulas, and values
+- Enhanced summary to show all tabs processed
+
+## v1.5 (2026-03-03)
+- **IMPROVEMENT**: Cockpit tab now finds column with MOST RECENT DATE in row 10 (not just last non-empty)
+- Loads workbook with data_only=True temporarily to read calculated date values
+- Identifies the column with the actual most recent date, then copies entire column to the right
+- All formulas in that column are dragged to the next column with adjusted references
+- Enhanced logging shows date values found and which column has the most recent date
+- More robust pre-save verification with cell counts
+
+## v1.4 (2026-03-03)
+- **CRITICAL FIX**: Fixed Cockpit date detection to find last non-empty column (not just datetime objects)
+- Previous version was looking for datetime objects, but row 10 contains formulas
+- Added comprehensive logging throughout Cockpit processing to diagnose issues
+- Added pre-save verification to check Cockpit column has data
+- Improved BTH integration logging with before/after verification
+- Added detailed logging for first/last columns to see what's being scanned
+- Formula and value counts now shown separately in Cockpit processing
+
+## v1.3 (2026-03-03)
+- **CRITICAL FIX**: Cockpit tab looks at ROW 10 for most recent date (was checking wrong rows)
+- Finds most recent date in Cockpit row 10, then copies that column to next column
+- Example: BJ (row 10 has most recent date) → BK (new column)
+- BTH file uses most recent date from row 30
+- Added verification step: confirms value is correctly pasted to Cockpit row 20
+- Expected result: 564,519,892 in Cockpit BK20
+
+## v1.2 (2026-03-03)
+- **BUG FIX**: Cockpit tab now uses same column as Beginning Balances (stays in sync)
+- Fixed issue where Cockpit wasn't copying formulas correctly
+- Cockpit now copies from previous column to new column using same column number as Beginning Balances
+- Ensures Beginning Balances and Cockpit tabs use matching columns
+
+## v1.1 (2026-03-03)
+- Added Cockpit tab processing (copies formulas from last column to next column)
+- Added BTH Investments Financing Schedule file upload (optional third file)
+- BTH file integration: matches date and pastes Total BTH Financing to Cockpit row 20
+- Updated UI to support 3-column file upload grid
+- Enhanced processing logic with Steps 8-10
+
+## v1.0 (2026-03-03)
+- Initial versioned release
+- Python Flask web application for Excel balance processing
+- Formula adjustment with absolute/relative reference handling
+- Special handling for references 11, 60, 76, 91 (copy from previous week)
+- Mobile/network access with QR code support
+- Improved formula adjustment (two-pass regex)
+- All test cases passing
+
+## File Naming Convention
+`13WCF-Activity Rollforward App v{MAJOR}.{MINOR}.py`
+
+When updating:
+1. Increment MINOR for bug fixes and small changes (1.0 → 1.1)
+2. Increment MAJOR for significant features or breaking changes (1.9 → 2.0)
+3. Archive old version to Archive/Old_Versions_{DATE}/
+4. Update this VERSION file
+5. Update START_PYTHON_APP.command with new filename
+6. Commit changes to git with version tag

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>13WCF Balance Updater - Mobile Access</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #000;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 12px;
+            padding: 50px 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            text-align: center;
+            max-width: 600px;
+        }
+
+        h1 {
+            font-size: 28px;
+            color: #E8E8E8;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            color: #888;
+            margin-bottom: 40px;
+        }
+
+        .qr-section {
+            background: #fff;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 30px 0;
+            display: inline-block;
+        }
+
+        .qr-code {
+            width: 300px;
+            height: 300px;
+            border: none;
+        }
+
+        .url-display {
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 30px 0;
+        }
+
+        .url-label {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .url-text {
+            color: #23D389;
+            font-size: 24px;
+            font-weight: 600;
+            font-family: monospace;
+        }
+
+        .instructions {
+            background: #0A0A0A;
+            border: 1px solid #222;
+            border-radius: 8px;
+            padding: 25px;
+            text-align: left;
+            margin-top: 30px;
+        }
+
+        .instructions h2 {
+            color: #E8E8E8;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .instructions ol {
+            color: #AAA;
+            font-size: 14px;
+            line-height: 1.8;
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 10px;
+        }
+
+        .warning {
+            background: #1A0F0F;
+            border: 1px solid #D04E59;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            color: #D04E59;
+            font-size: 14px;
+        }
+
+        .warning strong {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+
+        .button {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 14px 28px;
+            background: #2870F0;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background 0.2s;
+            font-size: 15px;
+        }
+
+        .button:hover {
+            background: #1e5fd4;
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: #0F2A1F;
+            border: 1px solid #23D389;
+            border-radius: 6px;
+            color: #23D389;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 30px;
+        }
+
+        .status::before {
+            content: "●";
+            font-size: 12px;
+        }
+
+        .ip-info {
+            background: #0A0A0A;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 20px;
+            color: #888;
+            font-size: 13px;
+        }
+
+        code {
+            background: #000;
+            border: 1px solid #222;
+            color: #23D389;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 13WCF Balance Updater</h1>
+        <p class="subtitle">Mobile & Network Access</p>
+
+        <div class="status">Server Running on Local Network</div>
+
+        <div class="qr-section">
+            <img class="qr-code"
+                 src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=http://10.5.41.228:5000"
+                 alt="QR Code for Balance Updater">
+        </div>
+
+        <div class="url-display">
+            <div class="url-label">Access URL:</div>
+            <div class="url-text">http://10.5.41.228:5000</div>
+        </div>
+
+        <a href="http://10.5.41.228:5000" class="button">Open Balance Updater</a>
+
+        <div class="instructions">
+            <h2>📋 How to Access from Mobile Device</h2>
+            <ol>
+                <li>Make sure your Mac is running the app (double-click <code>START_PYTHON_APP.command</code>)</li>
+                <li>Connect your phone/tablet to the <strong>same WiFi network</strong> as this Mac</li>
+                <li><strong>Scan the QR code above</strong> with your phone's camera</li>
+                <li>Or manually enter the URL: <code>http://10.5.41.228:5000</code></li>
+                <li>Upload and process your Excel files from any device!</li>
+            </ol>
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ Important Notes:</strong>
+            Both devices must be on the same WiFi network. This Mac must stay awake with the server running. The URL will change if your IP address changes.
+        </div>
+
+        <div class="ip-info">
+            <strong>Current Local IP:</strong> 10.5.41.228<br>
+            If your IP changes, regenerate the QR code with your new IP address.
+        </div>
+    </div>
+</body>
+</html>
