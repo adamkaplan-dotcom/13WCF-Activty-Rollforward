@@ -61,7 +61,14 @@ def get_sheet_xml_path(zip_path, sheet_name):
         rels_xml = etree.parse(z.open("xl/_rels/workbook.xml.rels"))
         for rel in rels_xml.getroot():
             if rel.get("Id") == r_id:
-                return "xl/" + rel.get("Target")
+                target = rel.get("Target")
+                # Handle both absolute (/xl/worksheets/...) and relative (worksheets/...) paths
+                if target.startswith("/"):
+                    return target.lstrip("/")
+                elif target.startswith("xl/"):
+                    return target
+                else:
+                    return "xl/" + target
     raise ValueError(f"Could not resolve path for '{sheet_name}'")
 
 
@@ -302,22 +309,56 @@ def append_activity_data(aggregator_path, rollforward_path, output_path, log=Non
         del df_to_append, full_mapping
         log.append(f"  Row XML size: {len(rows_xml) / 1024 / 1024:.1f} MB")
 
+        # When input and output are the same file, use a temp file to avoid corruption
+        if os.path.abspath(rollforward_path) == os.path.abspath(output_path):
+            write_target = output_path + ".sa_tmp"
+        else:
+            write_target = output_path
+
         log.append("Writing output file with appended rows...")
-        stream_append_rows(rollforward_path, sheet_path, rows_xml, output_path)
+        stream_append_rows(rollforward_path, sheet_path, rows_xml, write_target)
         del rows_xml
 
         if new_ss_xml is not None:
             log.append("Updating shared strings...")
-            temp_path = output_path + ".tmp"
-            with zipfile.ZipFile(output_path, "r") as zin:
+            temp_path = write_target + ".ss_tmp"
+            with zipfile.ZipFile(write_target, "r") as zin:
+                has_ss = "xl/sharedStrings.xml" in zin.namelist()
                 with zipfile.ZipFile(temp_path, "w", zipfile.ZIP_DEFLATED) as zout:
                     for item in zin.namelist():
                         if item == "xl/sharedStrings.xml":
                             zout.writestr(item, new_ss_xml)
+                        elif item == "[Content_Types].xml" and not has_ss:
+                            # Register sharedStrings part in Content_Types if it's new
+                            ct_raw = zin.read(item)
+                            ct_str = ct_raw.decode("utf-8")
+                            if "sharedStrings.xml" not in ct_str:
+                                insert = '<Override PartName="/xl/sharedStrings.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>'
+                                ct_str = ct_str.replace("</Types>", insert + "</Types>")
+                            zout.writestr(item, ct_str.encode("utf-8"))
+                        elif item == "xl/_rels/workbook.xml.rels" and not has_ss:
+                            # Add sharedStrings relationship if it's new
+                            rels_raw = zin.read(item)
+                            rels_str = rels_raw.decode("utf-8")
+                            if "sharedStrings" not in rels_str:
+                                # Find max rId to create a new unique one
+                                existing_ids = [int(m) for m in re.findall(r'Id="rId(\d+)"', rels_str)]
+                                new_id = max(existing_ids) + 1 if existing_ids else 1
+                                rel_entry = f'<Relationship Id="rId{new_id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/>'
+                                rels_str = rels_str.replace("</Relationships>", rel_entry + "</Relationships>")
+                            zout.writestr(item, rels_str.encode("utf-8"))
                         else:
                             zout.writestr(item, zin.read(item))
-            os.replace(temp_path, output_path)
+                    # If sharedStrings.xml didn't exist in original, add it now
+                    if not has_ss:
+                        log.append("  Adding new xl/sharedStrings.xml (not in original)")
+                        zout.writestr("xl/sharedStrings.xml", new_ss_xml)
+            os.replace(temp_path, write_target)
             del new_ss_xml
+
+        # If we used a temp file, replace the original
+        if write_target != output_path:
+            os.replace(write_target, output_path)
 
         log.append(f"✓ Successfully appended {rows_count:,} rows to Stacked Activity tab")
 
